@@ -1,10 +1,12 @@
 import cv2
 import time
+from emailing import send_email
 
 time.sleep(1)
 video = cv2.VideoCapture(0)
 first_frame = None
 while True:
+    status = 0
     check, frame = video.read()
     gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     gray_frame_gau = cv2.GaussianBlur(gray_frame, (21, 21), 0)
@@ -23,9 +25,18 @@ while True:
         if cv2.contourArea(counter) < 5000:
             continue
         x, y, w, h = cv2.boundingRect(counter)
-        cv2.rectangle(frame, (x,y), (x+w, y+h), (0,255,0), 2)
+        rectangle = cv2.rectangle(frame, (x,y), (x+w, y+h), (0,255,0), 2)
+        if rectangle.any():
+            status = 1
+            send_email()
+    status_list = []
+    status_list.append(status)
+    print(status_list)
+    status_list = status_list[-2:]
+    if len(status_list) == 2 and status_list[0] == 1 and status_list[1] == 0:
+        send_email()
 
-    cv2.imshow('My second frame', frame)
+    cv2.imshow('My first frame', frame)
 
     key = cv2.waitKey(1)
 
